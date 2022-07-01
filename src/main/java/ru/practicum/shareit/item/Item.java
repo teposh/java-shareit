@@ -1,19 +1,21 @@
-package ru.practicum.shareit.requests;
+package ru.practicum.shareit.item;
 
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.util.AbstractBaseEntity;
 
-import java.time.LocalDate;
-
 @Data
 @Builder(toBuilder = true)
-public class ItemRequest implements AbstractBaseEntity {
+public class Item implements AbstractBaseEntity {
     Long id;
+
+    String name;
 
     String description;
 
-    Long requestorId;
+    Boolean available;
 
-    LocalDate created;
+    Long ownerId;
+
+    Long requestId;
 }
