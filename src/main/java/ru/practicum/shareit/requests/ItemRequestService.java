@@ -5,11 +5,9 @@ import java.util.List;
 public interface ItemRequestService {
     List<ItemRequest> getAll();
 
-    ItemRequest get(Long id);
+    ItemRequest get(long id);
 
-    ItemRequest add(ItemRequest itemRequest);
+    ItemRequest save(ItemRequest itemRequest);
 
-    ItemRequest update(ItemRequest itemRequest);
-
-    void delete(Long id);
+    void delete(long id);
 }

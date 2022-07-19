@@ -1,17 +1,17 @@
 package ru.practicum.shareit.requests;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.ConfigVars;
 import ru.practicum.shareit.exceptions.NotValidOwnerException;
 import ru.practicum.shareit.requests.dto.ItemRequestDto;
+import ru.practicum.shareit.user.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
 
-@Slf4j
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -19,33 +19,40 @@ import java.util.List;
 public class ItemRequestController {
     private final ItemRequestService itemRequestService;
 
+    private final UserService userService;
+
+    private final ModelMapper modelMapper;
+
     @GetMapping
     List<ItemRequest> getAll() {
         return itemRequestService.getAll();
     }
 
     @GetMapping("{id}")
-    ItemRequest get(@PathVariable Long id) {
+    ItemRequest get(@PathVariable long id) {
         return itemRequestService.get(id);
     }
 
     @PostMapping
     ItemRequest create(@Valid @RequestBody ItemRequestDto itemRequestDto,
                        @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
-        return itemRequestService.add(ItemRequestMapper.toItemRequest(itemRequestDto, userId));
+        ItemRequest itemRequest = modelMapper.map(itemRequestDto, ItemRequest.class);
+        itemRequest.setRequestor(userService.get(userId));
+        return itemRequestService.save(itemRequest);
     }
 
-    @PutMapping
-    ItemRequest update(@Valid @RequestBody ItemRequestDto itemRequestDto,
+    @PatchMapping("{id}")
+    ItemRequest update(@PathVariable long id,
+                       @Valid @RequestBody ItemRequestDto itemRequestDto,
                        @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
-        ItemRequest currentItemRequest = itemRequestService.get(itemRequestDto.getId());
-        if (currentItemRequest.getRequestorId() != userId) throw new NotValidOwnerException();
-        ItemRequest updatedItemRequest = ItemRequestMapper.map(itemRequestDto, currentItemRequest);
-        return itemRequestService.update(updatedItemRequest);
+        ItemRequest itemRequest = itemRequestService.get(id);
+        if (itemRequest.getRequestor().getId() != userId) throw new NotValidOwnerException();
+        modelMapper.map(itemRequestDto, itemRequest);
+        return itemRequestService.save(itemRequest);
     }
 
     @DeleteMapping("{id}")
-    void delete(@PathVariable Long id) {
+    void delete(@PathVariable long id) {
         itemRequestService.delete(id);
     }
 }

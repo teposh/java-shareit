@@ -2,37 +2,35 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.user.dao.UserDao;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private final UserDao userDao;
+    private final UserRepository userRepository;
 
     @Override
     public List<User> getAll() {
-        return userDao.getAll();
+        return userRepository.findAll();
     }
 
     @Override
-    public User get(Long id) {
-        return userDao.get(id);
+    public User get(long id) {
+        return userRepository.findById(id).orElseThrow();
     }
 
     @Override
-    public User add(User user) {
-        return userDao.save(user);
+    @Transactional
+    public User save(User user) {
+        return userRepository.save(user);
     }
 
     @Override
-    public User update(User user) {
-        return userDao.save(user);
-    }
-
-    @Override
-    public void delete(Long id) {
-        userDao.delete(id);
+    @Transactional
+    public void delete(long id) {
+        userRepository.delete(userRepository.getReferenceById(id));
     }
 }

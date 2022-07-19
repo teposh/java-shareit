@@ -1,21 +1,32 @@
 package ru.practicum.shareit.item;
 
-import lombok.Builder;
 import lombok.Data;
-import ru.practicum.shareit.util.AbstractBaseEntity;
+import lombok.NoArgsConstructor;
+import ru.practicum.shareit.user.User;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+import java.util.List;
 
 @Data
-@Builder(toBuilder = true)
-public class Item implements AbstractBaseEntity {
+@Entity
+@NoArgsConstructor
+@Table(name = "items")
+public class Item {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String name;
+    @NotBlank @Size(max = 255) String name;
 
-    String description;
+    @NotBlank @Size(max = 4000) String description;
 
-    Boolean available;
+    boolean available;
 
-    Long ownerId;
+    @ManyToOne
+    User owner;
 
-    Long requestId;
+    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
+    List<Comment> comments;
 }

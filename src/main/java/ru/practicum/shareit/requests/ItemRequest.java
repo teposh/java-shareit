@@ -1,19 +1,25 @@
 package ru.practicum.shareit.requests;
 
-import lombok.Builder;
 import lombok.Data;
-import ru.practicum.shareit.util.AbstractBaseEntity;
+import ru.practicum.shareit.user.User;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Data
-@Builder(toBuilder = true)
-public class ItemRequest implements AbstractBaseEntity {
+@Entity
+@Table(name = "requests")
+public class ItemRequest {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    String description;
+    @NotBlank String description;
 
-    Long requestorId;
+    @ManyToOne
+    User requestor;
 
-    LocalDate created;
+    @NotNull LocalDate created;
 }

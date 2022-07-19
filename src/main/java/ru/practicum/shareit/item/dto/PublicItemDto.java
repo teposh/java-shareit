@@ -1,11 +1,13 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
-@Builder
-public class ItemDto {
+@NoArgsConstructor
+public class PublicItemDto {
     Long id;
 
     String name;
@@ -13,4 +15,6 @@ public class ItemDto {
     String description;
 
     Boolean available;
+
+    List<PublicCommentDto> comments;
 }
