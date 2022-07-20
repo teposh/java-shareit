@@ -5,6 +5,6 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 
 @Data
-public class ItemRequestDto {
+public class CreateOrUpdateItemRequestDto {
     @NotBlank String description;
 }

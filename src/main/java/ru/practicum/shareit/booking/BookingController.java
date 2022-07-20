@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.ConfigVars;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
+import ru.practicum.shareit.booking.dto.PublicBookingDto;
 import ru.practicum.shareit.exceptions.ItemNotAvailableException;
 import ru.practicum.shareit.exceptions.NotValidOwnerException;
 import ru.practicum.shareit.item.Item;
@@ -17,6 +18,7 @@ import javax.validation.Valid;
 import javax.validation.ValidationException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Validated
 @RestController
@@ -32,19 +34,19 @@ public class BookingController {
     private final ModelMapper modelMapper;
 
     @GetMapping("{id}")
-    Booking get(@PathVariable long id, @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+    PublicBookingDto get(@PathVariable long id, @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
         Booking booking = bookingService.get(id);
 
         if (!(booking.getBooker().getId() == userId || booking.getItem().getOwner().getId() == userId)) {
             throw new NotValidOwnerException();
         }
 
-        return booking;
+        return modelMapper.map(booking, PublicBookingDto.class);
     }
 
     @PostMapping
-    Booking create(@Valid @RequestBody CreateBookingDto createBookingDto,
-                   @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+    PublicBookingDto create(@Valid @RequestBody CreateBookingDto createBookingDto,
+                            @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
         Item item = itemService.get(createBookingDto.getItemId());
         User user = userService.get(userId);
 
@@ -63,11 +65,13 @@ public class BookingController {
         booking.setBooker(user);
         booking.setStatus(BookingStatus.WAITING);
 
-        return bookingService.save(booking);
+        return modelMapper.map(bookingService.save(booking), PublicBookingDto.class);
     }
 
     @PatchMapping("{id}")
-    Booking update(@PathVariable long id, @RequestParam boolean approved, @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+    PublicBookingDto update(@PathVariable long id,
+                            @RequestParam boolean approved,
+                            @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
         Booking booking = bookingService.get(id);
 
         if (booking.getItem().getOwner().getId() != userId) throw new NotValidOwnerException();
@@ -76,8 +80,7 @@ public class BookingController {
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-
-        return bookingService.save(booking);
+        return modelMapper.map(bookingService.save(booking), PublicBookingDto.class);
     }
 
     @DeleteMapping("{id}")
@@ -86,14 +89,20 @@ public class BookingController {
     }
 
     @GetMapping
-    List<Booking> getAllByCurrentUser(@RequestParam(defaultValue = "ALL") String state,
-                                      @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
-        return bookingService.getAllByCurrentUser(userId, state);
+    List<PublicBookingDto> getAllByCurrentUser(@RequestParam(defaultValue = "ALL") String state,
+                                               @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+        return toPublicBookingDtos(bookingService.getAllByCurrentUser(userId, state));
     }
 
     @GetMapping("/owner")
-    List<Booking> getAllByOwnedItems(@RequestParam(defaultValue = "ALL") String state,
-                                     @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
-        return bookingService.getAllByOwnedItems(userId, state);
+    List<PublicBookingDto> getAllByOwnedItems(@RequestParam(defaultValue = "ALL") String state,
+                                              @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+        return toPublicBookingDtos(bookingService.getAllByOwnedItems(userId, state));
+    }
+
+    private List<PublicBookingDto> toPublicBookingDtos(List<Booking> bookings) {
+        return bookings.stream()
+                .map(b -> modelMapper.map(b, PublicBookingDto.class))
+                .collect(Collectors.toList());
     }
 }

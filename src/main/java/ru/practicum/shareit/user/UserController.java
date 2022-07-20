@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.CreateOrUpdateUserDto;
+import ru.practicum.shareit.user.dto.PublicUserDto;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Validated
 @RestController
@@ -19,25 +21,29 @@ public class UserController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    List<User> getAll() {
-        return userService.getAll();
+    List<PublicUserDto> getAll() {
+        return userService.getAll().stream()
+                .map(u -> modelMapper.map(u, PublicUserDto.class))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("{id}")
-    User get(@PathVariable long id) {
-        return userService.get(id);
+    PublicUserDto get(@PathVariable long id) {
+        return modelMapper.map(userService.get(id), PublicUserDto.class);
     }
 
     @PostMapping
-    User create(@Valid @RequestBody User user) {
-        return userService.save(user);
+    PublicUserDto create(@Valid @RequestBody CreateOrUpdateUserDto createUserDto) {
+        User user = userService.save(modelMapper.map(createUserDto, User.class));
+        return modelMapper.map(user, PublicUserDto.class);
     }
 
     @PatchMapping("{id}")
-    User update(@PathVariable long id, @Valid @RequestBody UserDto userDto) {
+    PublicUserDto update(@PathVariable long id, @Valid @RequestBody CreateOrUpdateUserDto userDto) {
         User user = userService.get(id);
         modelMapper.map(userDto, user);
-        return userService.save(user);
+        user = userService.save(user);
+        return modelMapper.map(user, PublicUserDto.class);
     }
 
     @DeleteMapping("{id}")

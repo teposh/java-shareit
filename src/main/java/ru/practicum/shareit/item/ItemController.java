@@ -52,21 +52,25 @@ public class ItemController {
     }
 
     @PostMapping
-    Item create(@Valid @RequestBody CreateItemDto createItemDto,
-                @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+    PublicItemDto create(@Valid @RequestBody CreateItemDto createItemDto,
+                         @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
         Item item = modelMapper.map(createItemDto, Item.class);
         item.setOwner(userService.get(userId));
-        return itemService.save(item);
+        return modelMapper.map(
+                itemService.save(item), PublicItemDto.class
+        );
     }
 
     @PatchMapping("{id}")
-    Item update(@PathVariable long id,
-                @Valid @RequestBody UpdateItemDto updateItemDto,
-                @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
+    PublicItemDto update(@PathVariable long id,
+                         @Valid @RequestBody UpdateItemDto updateItemDto,
+                         @RequestHeader(ConfigVars.HTTP_USERID_HEADER) long userId) {
         Item item = itemService.get(id);
         if (item.getOwner().getId() != userId) throw new NotValidOwnerException();
         modelMapper.map(updateItemDto, item);
-        return itemService.save(item);
+        return modelMapper.map(
+                itemService.save(item), PublicItemDto.class
+        );
     }
 
     @DeleteMapping("{id}")
